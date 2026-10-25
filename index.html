@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EnrollX | Student Registration</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg1:#0f172a; --bg2:#1e1b4b; --card:rgba(255,255,255,.08); --border:rgba(255,255,255,.18);
+  --text:#f1f5f9; --muted:#94a3b8; --input:rgba(255,255,255,.07);
+  --accent:#8b5cf6; --accent2:#06b6d4; --ok:#22c55e; --err:#f43f5e;
+}
+body.light{
+  --bg1:#e0e7ff; --bg2:#fce7f3; --card:rgba(255,255,255,.7); --border:rgba(255,255,255,.9);
+  --text:#1e293b; --muted:#64748b; --input:rgba(255,255,255,.9);
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Poppins',sans-serif}
+body{
+  min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;
+  background:linear-gradient(135deg,var(--bg1),var(--bg2),var(--bg1)); background-size:300% 300%;
+  animation:bg 14s ease infinite; color:var(--text); overflow-x:hidden; transition:.4s;
+}
+@keyframes bg{0%,100%{background-position:0 50%}50%{background-position:100% 50%}}
+.blob{position:fixed;border-radius:50%;filter:blur(80px);opacity:.45;z-index:0;animation:float 10s ease-in-out infinite}
+.b1{width:340px;height:340px;background:var(--accent);top:-80px;left:-80px}
+.b2{width:300px;height:300px;background:var(--accent2);bottom:-80px;right:-60px;animation-delay:-5s}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(40px)}}
+
+.wrap{position:relative;z-index:1;width:100%;max-width:640px}
+.card{
+  background:var(--card); backdrop-filter:blur(22px); -webkit-backdrop-filter:blur(22px);
+  border:1px solid var(--border); border-radius:26px; padding:36px 34px;
+  box-shadow:0 25px 60px rgba(0,0,0,.35); animation:pop .7s ease;
+}
+@keyframes pop{from{opacity:0;transform:translateY(30px) scale(.97)}to{opacity:1;transform:none}}
+header{text-align:center;margin-bottom:22px}
+.logo{font-size:40px;margin-bottom:4px}
+h1{font-size:27px;font-weight:700;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+header p{color:var(--muted);font-size:13.5px;margin-top:4px}
+.toggle{position:fixed;top:18px;right:18px;z-index:5;border:1px solid var(--border);background:var(--card);color:var(--text);
+  width:44px;height:44px;border-radius:50%;cursor:pointer;font-size:19px;backdrop-filter:blur(10px)}
+
+/* progress */
+.steps{display:flex;justify-content:space-between;position:relative;margin:0 6px 28px}
+.steps::before{content:"";position:absolute;top:18px;left:8%;right:8%;height:3px;background:var(--border);border-radius:3px}
+.bar{position:absolute;top:18px;left:8%;height:3px;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px;transition:width .5s}
+.dot{position:relative;z-index:1;text-align:center;flex:1}
+.dot span{display:flex;width:38px;height:38px;margin:0 auto 6px;border-radius:50%;align-items:center;justify-content:center;
+  background:var(--bg1);border:2px solid var(--border);font-weight:600;font-size:14px;transition:.4s}
+.dot small{font-size:11.5px;color:var(--muted)}
+.dot.active span{border-color:var(--accent);box-shadow:0 0 0 5px rgba(139,92,246,.25);transform:scale(1.1)}
+.dot.done span{background:linear-gradient(135deg,var(--accent),var(--accent2));border-color:transparent;color:#fff}
+
+/* form */
+.step{display:none;animation:slide .5s ease}
+.step.show{display:block}
+@keyframes slide{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:none}}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.full{grid-column:1/-1}
+.field{position:relative}
+label{display:block;font-size:12.5px;font-weight:500;margin-bottom:6px;color:var(--muted)}
+input,select,textarea{
+  width:100%;padding:13px 14px;background:var(--input);border:1.5px solid var(--border);border-radius:12px;
+  color:var(--text);font-size:14px;outline:none;transition:.25s;
+}
+select option{color:#111}
+textarea{resize:none;height:80px}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(139,92,246,.2)}
+.field.valid input,.field.valid select,.field.valid textarea{border-color:var(--ok)}
+.field.invalid input,.field.invalid select,.field.invalid textarea{border-color:var(--err);animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.msg{font-size:11.5px;color:var(--err);margin-top:4px;min-height:14px;opacity:0;transition:.2s}
+.field.invalid .msg{opacity:1}
+.radios,.checks{display:flex;gap:10px;flex-wrap:wrap}
+.chip{position:relative}
+.chip input{position:absolute;opacity:0}
+.chip span{display:inline-block;padding:9px 16px;border-radius:30px;border:1.5px solid var(--border);background:var(--input);
+  font-size:13px;cursor:pointer;transition:.25s;user-select:none}
+.chip input:checked+span{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-color:transparent;transform:scale(1.05)}
+.counter{position:absolute;right:10px;bottom:24px;font-size:11px;color:var(--muted)}
+
+/* review */
+.review{background:var(--input);border:1px solid var(--border);border-radius:16px;padding:18px}
+.row{display:flex;justify-content:space-between;gap:14px;padding:9px 0;border-bottom:1px dashed var(--border);font-size:13.5px}
+.row:last-child{border:none}
+.row b{color:var(--muted);font-weight:500;white-space:nowrap}
+.row span{text-align:right;word-break:break-word}
+.terms{display:flex;gap:10px;align-items:flex-start;margin-top:16px;font-size:13px;color:var(--muted)}
+.terms input{width:auto;margin-top:3px;accent-color:var(--accent)}
+
+/* buttons */
+.btns{display:flex;justify-content:space-between;gap:12px;margin-top:26px}
+button.btn{flex:1;padding:14px;border:none;border-radius:14px;font-size:15px;font-weight:600;cursor:pointer;transition:.25s;color:#fff}
+.next,.submit{background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 10px 25px rgba(139,92,246,.4)}
+.next:hover,.submit:hover{transform:translateY(-3px);box-shadow:0 14px 30px rgba(139,92,246,.55)}
+.back{background:var(--input);color:var(--text);border:1px solid var(--border)!important}
+.back:hover{background:var(--border)}
+.btn:disabled{opacity:.6;cursor:wait;transform:none!important}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-3px;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* success */
+.success{display:none;text-align:center;padding:20px 0}
+.tick{width:92px;height:92px;margin:0 auto 18px}
+.tick circle{stroke:var(--ok);stroke-width:4;fill:none;stroke-dasharray:260;stroke-dashoffset:260;animation:draw .8s forwards}
+.tick path{stroke:var(--ok);stroke-width:5;fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:60;stroke-dashoffset:60;animation:draw .5s .7s forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.success h2{font-size:24px;margin-bottom:8px}
+.success p{color:var(--muted);font-size:14px}
+.regid{display:inline-block;margin:18px 0;padding:10px 22px;border-radius:30px;border:1.5px dashed var(--accent);font-weight:600;letter-spacing:1px;color:var(--accent2)}
+canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:10}
+.note{margin-top:14px;text-align:center;font-size:11.5px;color:var(--muted)}
+@media(max-width:560px){.grid{grid-template-columns:1fr}.card{padding:26px 20px}}
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div>
+<button class="toggle" id="theme" title="Toggle theme">🌙</button>
+<canvas id="confetti"></canvas>
+
+<div class="wrap">
+  <div class="card">
+    <header>
+      <div class="logo">🎓</div>
+      <h1>EnrollX</h1>
+      <p>Student Registration · Register in 3 quick steps</p>
+    </header>
+
+    <div class="steps">
+      <div class="bar" id="bar"></div>
+      <div class="dot active"><span>1</span><small>Personal</small></div>
+      <div class="dot"><span>2</span><small>Academic</small></div>
+      <div class="dot"><span>3</span><small>Review</small></div>
+    </div>
+
+    <form id="form" novalidate>
+      <!-- STEP 1 -->
+      <div class="step show">
+        <div class="grid">
+          <div class="field full"><label>Full Name</label>
+            <input type="text" id="name" placeholder="e.g. Rahul Sharma"><div class="msg"></div></div>
+          <div class="field"><label>Email</label>
+            <input type="email" id="email" placeholder="you@example.com"><div class="msg"></div></div>
+          <div class="field"><label>Phone Number</label>
+            <input type="tel" id="phone" placeholder="10-digit mobile" maxlength="10"><div class="msg"></div></div>
+          <div class="field"><label>Date of Birth</label>
+            <input type="date" id="dob"><div class="msg"></div></div>
+          <div class="field"><label>Gender</label>
+            <div class="radios" id="gender">
+              <label class="chip"><input type="radio" name="gender" value="Male"><span>Male</span></label>
+              <label class="chip"><input type="radio" name="gender" value="Female"><span>Female</span></label>
+              <label class="chip"><input type="radio" name="gender" value="Other"><span>Other</span></label>
+            </div><div class="msg"></div></div>
+        </div>
+      </div>
+
+      <!-- STEP 2 -->
+      <div class="step">
+        <div class="grid">
+          <div class="field"><label>Roll Number</label>
+            <input type="text" id="roll" placeholder="e.g. 25MBA101"><div class="msg"></div></div>
+          <div class="field"><label>Course</label>
+            <select id="course"><option value="">Select course</option><option>MBA</option><option>B.Tech</option><option>BBA</option><option>BCA</option><option>MCA</option><option>B.Com</option><option>Other</option></select>
+            <div class="msg"></div></div>
+          <div class="field"><label>Year</label>
+            <select id="year"><option value="">Select year</option><option>1st Year</option><option>2nd Year</option><option>3rd Year</option><option>4th Year</option></select>
+            <div class="msg"></div></div>
+          <div class="field"><label>City</label>
+            <input type="text" id="city" placeholder="e.g. Delhi"><div class="msg"></div></div>
+          <div class="field full"><label>Interests</label>
+            <div class="checks" id="interests">
+              <label class="chip"><input type="checkbox" value="Coding"><span>💻 Coding</span></label>
+              <label class="chip"><input type="checkbox" value="AI"><span>🤖 AI</span></label>
+              <label class="chip"><input type="checkbox" value="Design"><span>🎨 Design</span></label>
+              <label class="chip"><input type="checkbox" value="Marketing"><span>📈 Marketing</span></label>
+              <label class="chip"><input type="checkbox" value="Startups"><span>🚀 Startups</span></label>
+            </div></div>
+          <div class="field full"><label>Address</label>
+            <textarea id="address" maxlength="150" placeholder="Your full address"></textarea>
+            <span class="counter" id="cnt">0/150</span><div class="msg"></div></div>
+        </div>
+      </div>
+
+      <!-- STEP 3 -->
+      <div class="step">
+        <div class="review" id="review"></div>
+        <label class="terms"><input type="checkbox" id="terms"> I confirm that all the details above are correct.</label>
+        <div class="field" style="margin-top:4px"><div class="msg" id="termsMsg">Please confirm to continue</div></div>
+      </div>
+
+      <div class="btns">
+        <button type="button" class="btn back" id="back" style="display:none">← Back</button>
+        <button type="button" class="btn next" id="next">Next →</button>
+        <button type="button" class="btn submit" id="submit" style="display:none">Submit ✓</button>
+      </div>
+    </form>
+
+    <div class="success" id="success">
+      <svg class="tick" viewBox="0 0 100 100"><circle cx="50" cy="50" r="41"/><path d="M30 52 L45 66 L71 36"/></svg>
+      <h2>Registration Successful! 🎉</h2>
+      <p>Welcome aboard, <b id="sName"></b>. Your details are saved.</p>
+      <div class="regid" id="regId"></div>
+      <button class="btn next" style="width:100%;margin-top:6px" onclick="location.reload()">Register Another Student</button>
+    </div>
+  </div>
+  <p class="note" id="modeNote"></p>
+</div>
+
+<script>
+
+/* ====== 🔥 PASTE YOUR FIREBASE CONFIG HERE ====== */
+const firebaseConfig = {
+  apiKey: "AIzaSyChLjLXMSGC63dVIv8u9jFSeQVwPlkQEak",
+  authDomain: "enrollx-5c09c.firebaseapp.com",
+  projectId: "enrollx-5c09c",
+  storageBucket: "enrollx-5c09c.firebasestorage.app",
+  messagingSenderId: "960601445311",
+  appId: "1:960601445311:web:6848e9b99f8ae904b9470a"
+};
+/* ================================================ */
+
+const configured = firebaseConfig.apiKey !== "YOUR_API_KEY";
+let fb = null;
+async function loadFirebase(){
+  if (fb) return fb;
+  const base = "https://www.gstatic.com/firebasejs/10.12.2/";
+  const [appM, fsM] = await Promise.all([
+    import(base + "firebase-app.js"),
+    import(base + "firebase-firestore.js")
+  ]);
+  fb = { db: fsM.getFirestore(appM.initializeApp(firebaseConfig)), addDoc: fsM.addDoc, collection: fsM.collection, serverTimestamp: fsM.serverTimestamp };
+  return fb;
+}
+document.getElementById("modeNote").textContent = configured
+  ? "🔥 Firebase Firestore connected"
+  : "⚠️ Demo mode: Firebase config not added yet (data saves locally)";
+
+const $ = id => document.getElementById(id);
+const steps = [...document.querySelectorAll(".step")];
+const dots = [...document.querySelectorAll(".dot")];
+let cur = 0;
+
+/* theme */
+$("theme").onclick = () => {
+  document.body.classList.toggle("light");
+  $("theme").textContent = document.body.classList.contains("light") ? "☀️" : "🌙";
+};
+
+/* validators */
+const rules = {
+  name:  v => /^[A-Za-z][A-Za-z .'-]{2,}$/.test(v.trim()) || "Enter a valid name (min 3 letters)",
+  email: v => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v) || "Enter a valid email address",
+  phone: v => /^[6-9]\d{9}$/.test(v) || "Enter a valid 10-digit Indian mobile number",
+  dob:   v => {
+    if (!v) return "Select your date of birth";
+    const age = (Date.now() - new Date(v)) / 31557600000;
+    return (age >= 15 && age <= 60) || "Age must be between 15 and 60";
+  },
+  roll:  v => /^[A-Za-z0-9\-\/]{4,}$/.test(v.trim()) || "Enter a valid roll number",
+  course:v => !!v || "Select your course",
+  year:  v => !!v || "Select your year",
+  city:  v => /^[A-Za-z .'-]{2,}$/.test(v.trim()) || "Enter a valid city",
+  address:v => v.trim().length >= 10 || "Address must be at least 10 characters"
+};
+function check(id){
+  const el = $(id), f = el.closest(".field"), r = rules[id](el.value);
+  const ok = r === true;
+  f.classList.toggle("valid", ok); f.classList.toggle("invalid", !ok);
+  f.querySelector(".msg").textContent = ok ? "" : r;
+  return ok;
+}
+Object.keys(rules).forEach(id => {
+  const el = $(id);
+  el.addEventListener("input", () => { if (el.closest(".field").classList.contains("invalid") || el.closest(".field").classList.contains("valid")) check(id); });
+  el.addEventListener("blur", () => { if (el.value) check(id); });
+  el.addEventListener("change", () => check(id));
+});
+$("phone").addEventListener("input", e => e.target.value = e.target.value.replace(/\D/g,""));
+$("address").addEventListener("input", e => $("cnt").textContent = e.target.value.length + "/150");
+
+function genderOk(){
+  const ok = !!document.querySelector('input[name="gender"]:checked');
+  const f = $("gender").closest(".field");
+  f.classList.toggle("invalid", !ok);
+  f.querySelector(".msg").textContent = ok ? "" : "Select your gender";
+  return ok;
+}
+document.querySelectorAll('input[name="gender"]').forEach(r => r.onchange = genderOk);
+
+function validateStep(i){
+  let ok = true;
+  const ids = i === 0 ? ["name","email","phone","dob"] : i === 1 ? ["roll","course","year","city","address"] : [];
+  ids.forEach(id => { if (!check(id)) ok = false; });
+  if (i === 0 && !genderOk()) ok = false;
+  return ok;
+}
+
+/* navigation */
+function show(i){
+  steps.forEach((s,k) => s.classList.toggle("show", k === i));
+  dots.forEach((d,k) => { d.classList.toggle("active", k === i); d.classList.toggle("done", k < i); });
+  $("bar").style.width = (i / (steps.length - 1)) * 84 + "%";
+  $("back").style.display = i ? "block" : "none";
+  $("next").style.display = i === steps.length - 1 ? "none" : "block";
+  $("submit").style.display = i === steps.length - 1 ? "block" : "none";
+  if (i === 2) buildReview();
+}
+$("next").onclick = () => { if (validateStep(cur)) { cur++; show(cur); } };
+$("back").onclick = () => { cur--; show(cur); };
+
+function getData(){
+  return {
+    name: $("name").value.trim(),
+    email: $("email").value.trim().toLowerCase(),
+    phone: $("phone").value,
+    dob: $("dob").value,
+    gender: document.querySelector('input[name="gender"]:checked').value,
+    rollNumber: $("roll").value.trim().toUpperCase(),
+    course: $("course").value,
+    year: $("year").value,
+    city: $("city").value.trim(),
+    interests: [...document.querySelectorAll("#interests input:checked")].map(c => c.value),
+    address: $("address").value.trim()
+  };
+}
+function buildReview(){
+  const d = getData();
+  const rows = [["Name",d.name],["Email",d.email],["Phone","+91 "+d.phone],["Date of Birth",d.dob],["Gender",d.gender],
+    ["Roll No.",d.rollNumber],["Course",d.course+" – "+d.year],["City",d.city],
+    ["Interests",d.interests.join(", ") || "—"],["Address",d.address]];
+  $("review").innerHTML = rows.map(r => `<div class="row"><b>${r[0]}</b><span></span></div>`).join("");
+  [...$("review").querySelectorAll(".row span")].forEach((s,i) => s.textContent = rows[i][1]);
+}
+
+/* submit */
+$("form").addEventListener("submit", e => e.preventDefault());
+$("submit").addEventListener("click", async e => {
+  e.preventDefault();
+  if (!$("terms").checked) { $("termsMsg").parentElement.classList.add("invalid"); return; }
+  $("termsMsg").parentElement.classList.remove("invalid");
+  const btn = $("submit"); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Saving...';
+  const data = getData();
+  try {
+    let id;
+    if (configured) {
+      const url = `https://firestore.googleapis.com/v1/projects/${firebaseConfig.projectId}/databases/(default)/documents/students?key=${firebaseConfig.apiKey}`;
+      const fields = {};
+      Object.entries(data).forEach(([k, v]) => {
+        fields[k] = Array.isArray(v)
+          ? { arrayValue: { values: v.map(x => ({ stringValue: x })) } }
+          : { stringValue: String(v) };
+      });
+      fields.createdAt = { timestampValue: new Date().toISOString() };
+      const res = await Promise.race([
+        fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fields })
+        }),
+        new Promise((_, rej) => setTimeout(() => rej(new Error("Timed out. Check internet / Firestore database.")), 12000))
+      ]);
+      const json = await res.json();
+      if (!res.ok) throw new Error((json.error && json.error.message) || "Request failed (" + res.status + ")");
+      id = json.name.split("/").pop().slice(0, 8).toUpperCase();
+    } else {
+      const all = JSON.parse(localStorage.getItem("students") || "[]");
+      id = "DEMO" + Math.floor(1000 + Math.random()*9000);
+      all.push({ ...data, id }); localStorage.setItem("students", JSON.stringify(all));
+      await new Promise(r => setTimeout(r, 900));
+    }
+    document.querySelector(".steps").style.display = "none";
+    $("form").style.display = "none";
+    document.querySelector("header p").textContent = "All done!";
+    $("sName").textContent = data.name.split(" ")[0];
+    $("regId").textContent = "Reg ID: " + id;
+    $("success").style.display = "block";
+    launchConfetti();
+  } catch (err) {
+    console.error(err);
+    const n = $("modeNote"); n.style.color = "#f43f5e"; n.style.fontSize = "13px";
+    n.textContent = "❌ Could not save: " + (err.message || err) + " (Tip: open this file in your normal browser, not the preview.)";
+    btn.disabled = false; btn.textContent = "Submit ✓";
+  }
+});
+
+/* confetti */
+function launchConfetti(){
+  const c = $("confetti"), ctx = c.getContext("2d");
+  c.width = innerWidth; c.height = innerHeight;
+  const cols = ["#8b5cf6","#06b6d4","#22c55e","#f59e0b","#f43f5e","#fff"];
+  const p = Array.from({length:160}, () => ({
+    x: Math.random()*c.width, y: -20 - Math.random()*c.height*.5, w: 6+Math.random()*7, h: 8+Math.random()*10,
+    vx: -2+Math.random()*4, vy: 3+Math.random()*5, r: Math.random()*6, vr: -.2+Math.random()*.4,
+    col: cols[Math.floor(Math.random()*cols.length)]
+  }));
+  let frames = 0;
+  (function loop(){
+    ctx.clearRect(0,0,c.width,c.height);
+    p.forEach(o => { o.x+=o.vx; o.y+=o.vy; o.r+=o.vr; ctx.save(); ctx.translate(o.x,o.y); ctx.rotate(o.r);
+      ctx.fillStyle=o.col; ctx.fillRect(-o.w/2,-o.h/2,o.w,o.h); ctx.restore(); });
+    if (++frames < 280) requestAnimationFrame(loop); else ctx.clearRect(0,0,c.width,c.height);
+  })();
+}
+show(0);
+</script>
+</body>
+</html>
